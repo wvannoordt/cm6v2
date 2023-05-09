@@ -1,0 +1,50 @@
+$ case            = 3
+$ mu_wall_val(i)  = @choose($(i), 3.0e-4, 3.5e-4, 3.0e-4, 1.5e-4)
+$ tau_wall_val(i) = @choose($(i), 1.58, 7.73, 20.06, 16.46)
+$ name(i)         = @choose($(i), m1r5, m3r10, m6r20, m6r40)
+
+@import(defaults)
+
+Time
+{
+    cfl           = 0.65
+    nt_max        = 140000
+    nt_skip       = 1500
+    ck_skip       = 500
+    output_timing = false
+}
+IO
+{
+	init_file     = none
+    out_dir       = "data_$name($(case))"
+	visc_file     = "visc_$name($(case)).dat"
+	hist_file     = "hist_$name($(case)).dat"
+    output_ducr   = false
+    output_sgs    = false
+}
+Fluid
+{
+    couple_dist = 3
+    mu_wall     = $mu_wall_val($(case))
+    tau_wall    = $tau_wall_val($(case))
+    perturb     = [ ] none, [ ] freq, [x] rand
+    wm_enable   = true
+}
+Num
+{
+    eps_ducr   = 1.0
+    eps_p      = 1.6
+    eps_T      = 0.0
+	wale_cw    = 0.25
+}
+WallModel
+{
+    verboseLevel                 = 0
+    suthViscRef                  = $mu_wall_val($(case))
+    solveSkip                    = 1
+    momentumEquationType         = [ ] allmaras,       [x] ODE,        [ ] fromFile
+    turbulenceEquationType       = [ ] linear,         [ ] ODE,        [x] vanDriest, [ ] fromFile, [ ] pnlm
+    energyEquationType           = [ ] croccoBusemann, [x] ODE,        [ ] linear,    [ ] fromFile
+    viscousLaw                   = [ ] constant,       [ ] sutherland, [x] PowerLaw
+    yScale                       = [x] trettelLarsson, [ ] yPlus,      [ ] mixed
+}
